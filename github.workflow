@@ -105,16 +105,21 @@ jobs:
 
       - name: Provision RDP User Identity & Global System Rules
         run: |
+                - name: Provision RDP User Identity & Global System Rules
+        shell: pwsh
+        run: |
           $u = $env:RDP_USER
-          $sec = ConvertTo-SecureString $env:RDP_PASS -AsPlainText -Force
-          if (-not (Get-LocalUser -Name $u -EA SilentlyContinue)) {
-            New-LocalUser -Name $u -Password $sec -AccountNeverExpires
-            Add-LocalGroupMember -Group "Administrators" -Member $u
-            Add-LocalGroupMember -Group "Remote Desktop Users" -Member $u
+          $p = $env:RDP_PASS | ConvertTo-SecureString -AsPlainText -Force
+          if (-not (Get-LocalUser -Name $u -ErrorAction SilentlyContinue)) {
+              New-LocalUser -Name $u -Password $p -AccountNeverExpires
+              Add-LocalGroupMember -Group "Administrators" -Member $u
+              Add-LocalGroupMember -Group "Remote Desktop Users" -Member $u
+              Set-LocalUser -Name $u -PasswordNeverExpires $true
           } else {
-            Set-LocalUser -Name $u -Password $sec -AccountNeverExpires
-            Enable-LocalUser -Name $u
+              Enable-LocalUser -Name $u
+              Set-LocalUser -Name $u -Password $p -PasswordNeverExpires $true
           }
+
           Set-ItemProperty "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name fDenyTSConnections -Value 0
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop" | Out-Null
 
