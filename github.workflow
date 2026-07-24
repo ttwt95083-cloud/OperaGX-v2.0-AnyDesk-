@@ -88,20 +88,22 @@ jobs:
             }
           } catch {}
 
-      - name: Install & Authenticate Tailscale Network
+      -       - name: Install & Authenticate Tailscale Network
         run: |
           $ts = "$env:ProgramFiles\Tailscale\tailscale.exe"
           if (-not (Test-Path $ts)) {
-            $url = "https://pkgs.tailscale.com/stable/tailscale-setup-1.82.0-amd64.msi"
-            $dst = "$env:TEMP\tailscale.msi"
-            Invoke-WebRequest -Uri $url -OutFile $dst
-            Start-Process msiexec.exe -ArgumentList "/i","`"$dst`"","/quiet","/norestart" -Wait
-            Remove-Item $dst -Force
+              $url = "https://pkgs.tailscale.com/stable/tailscale-setup-1.82.0-amd64.msi"
+              $dst = "$env:TEMP\tailscale.msi"
+              Invoke-WebRequest -Uri $url -OutFile $dst
+              Start-Process msiexec.exe -ArgumentList "/i`"$dst`" /quiet /norestart" -Wait
+              Remove-Item $dst -Force
+              Start-Sleep -Seconds 10
           }
-          & $ts logout | Out-Null
-          & $ts up --authkey "${{ secrets.AUTH }}" --hostname "pc" --accept-dns=true --accept-routes=true
+          & $ts up --authkey "$env:TAILSCALE_AUTHKEY" --hostname "pc" --accept-dns=true --accept-routes=true --reset
           $ip4 = & $ts ip -4 | Select-Object -First 1
           Write-Host "Tailscale Dedicated Node IP: $ip4"
+        env:
+          TAILSCALE_AUTHKEY: ${{ secrets.AUTH }}
 
       - name: Provision RDP User Identity & Global System Rules
         run: |
