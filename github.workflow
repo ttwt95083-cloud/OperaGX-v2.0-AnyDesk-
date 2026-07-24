@@ -78,13 +78,16 @@ jobs:
             $email = "${{ secrets.EMAIL }}"
             if ([string]::IsNullOrWhiteSpace($email)) { return }
             
-            $auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("${{ secrets.API }}:"))
-            $tn = [uri]::EscapeDataString($email)
-            $list = Invoke-RestMethod -Uri "https://api.tailscale.com/api/v2/tailnet/$tn/devices" -Headers @{ Authorization = "Basic $auth" }
-            foreach($d in $list.devices){
-                    - name: Install & Authenticate Tailscale Network
+                      $list = Invoke-RestMethod -Uri "https://api.tailscale.com/api/v2/tailnet/-/devices" -Headers $auth
+          foreach ($d in $list.devices){ if ($d.hostname -match "build(-[0-9]+)?$") { Invoke-RestMethod -Method Delete -Uri "https://api.tailscale.com/api/v2/device/$($d.id)" -Headers $auth } }
+        } catch {}
+
+      - name: Install & Authenticate Tailscale Network
         uses: tailscale/github-action@v2
         with:
+          authkey: ${{ secrets.AUTH }}
+          args: --hostname=pc
+
           authkey: ${{ secrets.AUTH }}
           args: --hostname=pc
 
