@@ -88,7 +88,7 @@ jobs:
             }
           } catch {}
 
-            - name: Install & Authenticate Tailscale Network
+                  - name: Install & Authenticate Tailscale Network
         env:
           TAILSCALE_AUTHKEY: ${{ secrets.AUTH }}
         run: |
@@ -99,8 +99,13 @@ jobs:
               Invoke-WebRequest -Uri $url -OutFile $dst
               Start-Process msiexec.exe -ArgumentList "/i`"$dst`" /quiet /norestart" -Wait
               Remove-Item $dst -Force
-              Start-Sleep -Seconds 10
+              Start-Sleep -Seconds 5
           }
+          Start-Service Tailscale -ErrorAction SilentlyContinue
+          & $ts up --authkey "$env:TAILSCALE_AUTHKEY" --hostname "pc" --accept-dns=true --accept-routes=true --reset
+          $ip4 = & $ts ip -4 | Select-Object -First 1
+          Write-Host "Tailscale Dedicated Node IP: $ip4"
+
           & $ts up --authkey "$env:TAILSCALE_AUTHKEY" --hostname "pc" --accept-dns=true --accept-routes=true --unattended --timeout=30s --reset
           $ip4 = & $ts ip -4 | Select-Object -First 1
           Write-Host "Tailscale Dedicated Node IP: $ip4"
