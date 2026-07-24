@@ -82,37 +82,12 @@ jobs:
             $tn = [uri]::EscapeDataString($email)
             $list = Invoke-RestMethod -Uri "https://api.tailscale.com/api/v2/tailnet/$tn/devices" -Headers @{ Authorization = "Basic $auth" }
             foreach($d in $list.devices){
-              if ($d.hostname -match '^(bullet|pc)[0-9]*$'){
-                Invoke-RestMethod -Method Delete -Uri "https://api.tailscale.com/api/v2/device/$($d.id)" -Headers @{ Authorization = "Basic $auth" } -ErrorAction SilentlyContinue
-              }
-            }
-          } catch {}
-
-                        - name: Install & Authenticate Tailscale Network
+                    - name: Install & Authenticate Tailscale Network
         uses: tailscale/github-action@v2
         with:
           authkey: ${{ secrets.AUTH }}
           args: --hostname=pc
 
-          Start-Service Tailscale -ErrorAction SilentlyContinue
-          & $ts up --authkey "$env:TAILSCALE_AUTHKEY" --hostname "pc" --accept-dns=true --accept-routes=true --reset
-          $ip4 = & $ts ip -4 | Select-Object -First 1
-          Write-Host "Tailscale Dedicated Node IP: $ip4"
-
-          & $ts up --authkey "$env:TAILSCALE_AUTHKEY" --hostname "pc" --accept-dns=true --accept-routes=true --unattended --timeout=30s --reset
-          $ip4 = & $ts ip -4 | Select-Object -First 1
-          Write-Host "Tailscale Dedicated Node IP: $ip4"
-
-          & $ts up --authkey "$env:TAILSCALE_AUTHKEY" --hostname "pc" --accept-dns=true --accept-routes=true --reset
-          $ip4 = & $ts ip -4 | Select-Object -First 1
-          Write-Host "Tailscale Dedicated Node IP: $ip4"
-        env:
-          TAILSCALE_AUTHKEY: ${{ secrets.AUTH }}
-
-      - name: Provision RDP User Identity & Global System Rules
-        run: |
-                - name: Provision RDP User Identity & Global System Rules
-        shell: pwsh
         run: |
           $u = $env:RDP_USER
           $p = $env:RDP_PASS | ConvertTo-SecureString -AsPlainText -Force
