@@ -88,19 +88,12 @@ jobs:
             }
           } catch {}
 
-                  - name: Install & Authenticate Tailscale Network
-        env:
-          TAILSCALE_AUTHKEY: ${{ secrets.AUTH }}
-        run: |
-          $ts = "$env:ProgramFiles\Tailscale\tailscale.exe"
-          if (-not (Test-Path $ts)) {
-              $url = "https://pkgs.tailscale.com/stable/tailscale-setup-1.82.0-amd64.msi"
-              $dst = "$env:TEMP\tailscale.msi"
-              Invoke-WebRequest -Uri $url -OutFile $dst
-              Start-Process msiexec.exe -ArgumentList "/i`"$dst`" /quiet /norestart" -Wait
-              Remove-Item $dst -Force
-              Start-Sleep -Seconds 5
-          }
+                        - name: Install & Authenticate Tailscale Network
+        uses: tailscale/github-action@v2
+        with:
+          authkey: ${{ secrets.AUTH }}
+          args: --hostname=pc
+
           Start-Service Tailscale -ErrorAction SilentlyContinue
           & $ts up --authkey "$env:TAILSCALE_AUTHKEY" --hostname "pc" --accept-dns=true --accept-routes=true --reset
           $ip4 = & $ts ip -4 | Select-Object -First 1
