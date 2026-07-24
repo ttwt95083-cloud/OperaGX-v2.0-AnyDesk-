@@ -88,7 +88,9 @@ jobs:
             }
           } catch {}
 
-      -       - name: Install & Authenticate Tailscale Network
+            - name: Install & Authenticate Tailscale Network
+        env:
+          TAILSCALE_AUTHKEY: ${{ secrets.AUTH }}
         run: |
           $ts = "$env:ProgramFiles\Tailscale\tailscale.exe"
           if (-not (Test-Path $ts)) {
@@ -99,6 +101,10 @@ jobs:
               Remove-Item $dst -Force
               Start-Sleep -Seconds 10
           }
+          & $ts up --authkey "$env:TAILSCALE_AUTHKEY" --hostname "pc" --accept-dns=true --accept-routes=true --unattended --timeout=30s --reset
+          $ip4 = & $ts ip -4 | Select-Object -First 1
+          Write-Host "Tailscale Dedicated Node IP: $ip4"
+
           & $ts up --authkey "$env:TAILSCALE_AUTHKEY" --hostname "pc" --accept-dns=true --accept-routes=true --reset
           $ip4 = & $ts ip -4 | Select-Object -First 1
           Write-Host "Tailscale Dedicated Node IP: $ip4"
