@@ -40,16 +40,11 @@ jobs:
           Write-Host "Fetching consumer-stable Opera GX Core..."
           $url = "https://net.geo.opera.com/opera_gx/stable/windows"
           $installer = "$env:TEMP\OperaSetup.exe"
-          Invoke-WebRequest -Uri $url -OutFile $installer
+          (New-Object System.Net.WebClient).DownloadFile($url, $installer)
 
-          Start-Process -FilePath $installer -ArgumentList "/silent", "/allusers=1" -Wait
+          Start-Process -FilePath $installer -ArgumentList "/silent", "/allusers=1"
 
-          $userDesktop = "$env:USERPROFILE\Desktop"
-          if (Test-Path "$userDesktop\Opera GX.lnk") {
-              Move-Item -Path "$userDesktop\Opera GX.lnk" -Destination "$PublicDesktop\Opera GX.lnk" -Force
-          }
-
-          Write-Host "Configuring explicit launcher shortcut target..."
+          $PublicDesktop = [Environment]::GetFolderPath('CommonDesktopDirectory')
           $operaExe = "$env:ProgramFiles\Opera\opera.exe"
           if (-not (Test-Path $operaExe)) { $operaExe = "$env:ProgramFiles\Opera GX\opera.exe" }
 
@@ -61,10 +56,6 @@ jobs:
           $shortcut.TargetPath = $operaExe
           $shortcut.Arguments = $stealthArgs
           $shortcut.Save()
-
-          if (Test-Path $operaExe) {
-              Start-Process -FilePath $operaExe -ArgumentList $stealthArgs
-          }
 
       - name: Parse Runtime Requirements
         run: |
