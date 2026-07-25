@@ -59,13 +59,7 @@ jobs:
 
       - name: Parse Runtime Requirements
         run: |
-          $rawMins = "${{ inputs.runtime_minutes }}"
-          $runtime = 355
-          if ($rawMins -match '^\d+$') {
-              $parsed = [int]$rawMins
-              if ($parsed -ge 1 -and $parsed -le 360) { $runtime = $parsed }
-          }
-          "RUNTIME_MINUTES=$runtime" | Out-File -Append $env:GITHUB_ENV
+          "RUNTIME_MINUTES=355" | Out-File -Append $env:GITHUB_ENV
 
       - name: Purge Legacy Machine Registrations
         run: |
