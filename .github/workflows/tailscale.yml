@@ -91,16 +91,25 @@ jobs:
 
       - name: Provision RDP User Identity & Global System Rules
         run: |
-          net user user Pass1234SecurePassword99 /add /expires:never
-          net user user Pass1234SecurePassword99
-          net localgroup Administrators user /add
-          net localgroup "Remote Desktop Users" user /add
+          $u = $env:RDP_USER
+          $p = $env:RDP_PASS
+          $pSec = ConvertTo-SecureString $p -AsPlainText -Force
+
+          $usr = Get-LocalUser -Name $u -ErrorAction SilentlyContinue
+          if (-not $usr) {
+              New-LocalUser -Name $u -Password $pSec -PasswordNeverExpires -AccountNeverExpires
+          } else {
+              Set-LocalUser -Name $u -Password $pSec -PasswordNeverExpires
+          }
+
+          Add-LocalGroupMember -Group "Administrators" -Member $u -ErrorAction SilentlyContinue
+          Add-LocalGroupMember -Group "Remote Desktop Users" -Member $u -ErrorAction SilentlyContinue
 
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 0
 
-          Enable-NetFirewallRule -DisplayGroup "Remote Desktop" | Out-Null
-          New-NetFirewallRule -DisplayName "Allow RDP Port 3389" -Direction Inbound -LocalPort 3389 -Protocol TCP -Action Allow -ErrorAction SilentlyContinue
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop" -ErrorAction SilentlyContinue | Out-Null
+          New-NetFirewallRule -DisplayName "Allow RDP Port 3389" -Direction Inbound -LocalPort 3389 -Protocol TCP -Action Allow -ErrorAction SilentlyContinue | Out-Null
 
       - name: Structural Window Minimization
         run: |
