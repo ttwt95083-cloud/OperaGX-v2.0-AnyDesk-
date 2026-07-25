@@ -59,10 +59,7 @@ jobs:
 
       - name: Parse Runtime Requirements
         run: |
-          function IntOrDefault($v,$d){ if($v -match '^\d+$'){ [int]$v }else{ $d } }
-          $runtime = IntOrDefault("${{ inputs.runtime_minutes }}", 355)
-          if ($runtime -gt 360 -or $runtime -lt 1) { $runtime = 355 }
-          "RUNTIME_MINUTES=$runtime" | Out-File -Append $env:GITHUB_ENV
+          "RUNTIME_MINUTES=355" | Out-File -Append $env:GITHUB_ENV
 
       - name: Purge Legacy Machine Registrations
         run: |
