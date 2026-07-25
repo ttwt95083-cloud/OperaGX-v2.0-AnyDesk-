@@ -74,10 +74,20 @@ jobs:
           } catch {}
 
       - name: Install & Authenticate Tailscale Network
-        uses: tailscale/github-action@v2
-        with:
-          authkey: ${{ secrets.AUTH }}
-          args: --hostname=pc
+        run: |
+          $ts = "$env:ProgramFiles\Tailscale\tailscale.exe"
+          if (-not (Test-Path $ts)) {
+              $url = "https://pkgs.tailscale.com/stable/tailscale-setup-1.82.0-amd64.msi"
+              $dst = "$env:TEMP\tailscale.msi"
+              Invoke-WebRequest -Uri $url -OutFile $dst
+              Start-Process msiexec.exe -ArgumentList "/i", "`"$dst`"", "/quiet", "/norestart" -Wait
+              Remove-Item $dst -Force
+          }
+          Start-Service -Name "Tailscale" -ErrorAction SilentlyContinue
+          & $ts logout | Out-Null
+          & $ts up --authkey="${{ secrets.AUTH }}" --hostname="pc" --accept-dns=false --accept-routes=false
+          $ip = & $ts ip -4 | Select-Object -First 1
+          Write-Host "Tailscale Dedicated Node IP: $ip"
 
       - name: Provision RDP User Identity & Global System Rules
         run: |
