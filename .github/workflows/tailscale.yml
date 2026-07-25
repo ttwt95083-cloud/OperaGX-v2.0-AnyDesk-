@@ -91,19 +91,14 @@ jobs:
 
       - name: Provision RDP User Identity & Global System Rules
         run: |
-          $u = $env:RDP_USER
-          $p = $env:RDP_PASS
-          $pSec = $p | ConvertTo-SecureString -AsPlainText -Force
-          if (-not (Get-LocalUser -Name $u -ErrorAction SilentlyContinue)) {
-              New-LocalUser -Name $u -Password $pSec -PasswordNeverExpires -AccountNeverExpires
-              Add-LocalGroupMember -Group "Administrators" -Member $u
-              Add-LocalGroupMember -Group "Remote Desktop Users" -Member $u
-          } else {
-              Enable-LocalUser -Name $u
-              Set-LocalUser -Name $u -Password $pSec -PasswordNeverExpires
-          }
+          net user user Pass1234SecurePassword99 /add /expires:never
+          net user user Pass1234SecurePassword99
+          net localgroup Administrators user /add
+          net localgroup "Remote Desktop Users" user /add
 
-          Set-ItemProperty "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 0
+
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop" | Out-Null
           New-NetFirewallRule -DisplayName "Allow RDP Port 3389" -Direction Inbound -LocalPort 3389 -Protocol TCP -Action Allow -ErrorAction SilentlyContinue
 
